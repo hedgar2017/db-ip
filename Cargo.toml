@@ -7,7 +7,7 @@ authors = ["hedgar <hedgar2017@gmail.com>"]
 name = "dbip"
 
 [dependencies]
-sqlite = "0.23.9"
+rusqlite = { version = "0.13.0", features = ["bundled"] }
 failure = "0.1.1"
 
 [dev-dependencies]

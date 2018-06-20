@@ -1,15 +1,15 @@
-use sqlite;
+use rusqlite;
 
 #[derive(Fail, Debug)]
 pub enum Error {
     #[fail(display = "SQLite: {}", _0)]
-    SQLite(sqlite::Error),
+    SQLite(rusqlite::Error),
     #[fail(display = "Not found")]
     NotFound,
 }
 
-impl From<sqlite::Error> for Error {
-    fn from(error: sqlite::Error) -> Error {
+impl From<rusqlite::Error> for Error {
+    fn from(error: rusqlite::Error) -> Error {
         Error::SQLite(error)
     }
 }

@@ -1,33 +1,54 @@
 extern crate csv;
-extern crate sqlite;
 
-use std::net::Ipv4Addr;
+use std::net::IpAddr;
+use std::fs::File;
 use std::str::FromStr;
-use std::io::Write;
-
-fn ipv4_to_numeric(ip: &Ipv4Addr) -> i64 {
-    ((ip.octets()[0] as i64) << 24) +
-    ((ip.octets()[1] as i64) << 16) +
-    ((ip.octets()[2] as i64) << 8) +
-    ((ip.octets()[3] as i64) << 0)
-}
+use std::io::BufReader;
+use csv::{Reader, Writer};
 
 fn main() {
-    let csv_in_file = std::fs::File::open("in.csv").unwrap();
-    let mut csv_out_file = std::fs::File::create("out.csv").unwrap();
+    let mut ipv4_writer = Writer::from_path("ipv4.csv").unwrap();
+    let mut ipv6_writer = Writer::from_path("ipv6.csv").unwrap();
 
-    let mut reader = csv::Reader::from_reader(std::io::BufReader::new(csv_in_file));
+    let mut reader = Reader::from_reader(BufReader::new(File::open("in.csv").unwrap()));
+    let mut index = 0usize;
     for result in reader.records() {
-        let record = result.unwrap();
+        let mut record = result.unwrap();
+        let mut csv_out_file = &mut ipv4_writer;
 
-        let start = ipv4_to_numeric(&Ipv4Addr::from_str(record.get(0).unwrap()).unwrap());
-        let end = ipv4_to_numeric(&Ipv4Addr::from_str(record.get(1).unwrap()).unwrap());
-        let country = record.get(2).unwrap();
-        let district = record.get(3).unwrap();
-        let city = record.get(4).unwrap();
+        let ip_start = match IpAddr::from_str(record.get(0).unwrap()).unwrap() {
+            IpAddr::V4(start) => u32::from(start).to_string(),
+            IpAddr::V6(start) => {
+                csv_out_file = &mut ipv6_writer;
+                format!("{:x}", u128::from(start))
+            },
+        };
+        let ip_end = match IpAddr::from_str(record.get(1).unwrap()).unwrap() {
+            IpAddr::V4(end) => u32::from(end).to_string(),
+            IpAddr::V6(end) => format!("{:x}", u128::from(end)),
+        };
 
-        csv_out_file
-            .write(format!("{},{},\"{}\",\"{}\",\"{}\"\n", start, end, country, district, city).as_bytes())
-            .unwrap();
+        csv_out_file.write_record(&[
+            ip_start.as_str(),
+            ip_end.as_str(),
+            record.get(2).unwrap(),
+            record.get(3).unwrap(),
+            record.get(4).unwrap(),
+            record.get(5).unwrap(),
+            record.get(6).unwrap(),
+            record.get(7).unwrap(),
+            record.get(8).unwrap(),
+            record.get(9).unwrap(),
+            record.get(10).unwrap(),
+            record.get(11).unwrap(),
+            record.get(12).unwrap(),
+            record.get(13).unwrap(),
+            record.get(14).unwrap(),
+        ]).unwrap();
+        index += 1;
+        if index % 1000 == 0 {
+            println!("{} records processed...", index);
+        }
     }
+    println!("{} records processed...", index);
 }

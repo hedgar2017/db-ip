@@ -3,5 +3,5 @@
 **/*.rs.bk
 *.lock
 *.csv
-*.sql
+*.exe
 *.db

@@ -9,6 +9,4 @@ name = "dbip"
 [dependencies]
 rusqlite = { version = "0.13.0", features = ["bundled"] }
 failure = "0.1.1"
-
-[dev-dependencies]
 csv = "1.0.0"

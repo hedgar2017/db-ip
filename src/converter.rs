@@ -46,42 +46,37 @@ impl Converter {
             let record = record?;
             let mut values = record.iter();
 
-            let ip_start = values.next().ok_or(CsvValueGetting)?;
+            let ip_start = values.next().ok_or(CsvValueGetting("ip_start"))?;
             let ip_start = IpAddr::from_str(ip_start)?;
             let ip_start = match ip_start {
                 IpAddr::V4(start) => format!("{:08x}", u32::from(start)),
                 IpAddr::V6(start) => format!("{:032x}", u128::from(start)),
             };
-            let ip_end = values.next().ok_or(CsvValueGetting)?;
+            let ip_end = values.next().ok_or(CsvValueGetting("ip_end"))?;
             let ip_end = IpAddr::from_str(ip_end)?;
             let ip_end = match ip_end {
                 IpAddr::V4(end) => format!("{:08x}", u32::from(end)),
                 IpAddr::V6(end) => format!("{:032x}", u128::from(end)),
             };
 
-            if index % inserts_per_statement == 0 {
-                statement.push_str("INSERT INTO ip_location VALUES ");
-            }
-            if index > 0 && index % inserts_per_statement != 0 {
-                statement.push_str(",");
-            }
+            statement.push_str(if index % inserts_per_statement == 0 {"INSERT INTO ip_location VALUES "} else {","});
             statement.push_str(format!(
                 "(x'{}',x'{}','{}','{}','{}','{}','{}',{},{},{},{},'{}','{}','{}','{}')",
                 ip_start.as_str(),
                 ip_end.as_str(),
-                values.next().ok_or(CsvValueGetting)?.replace("'", "''"),
-                values.next().ok_or(CsvValueGetting)?.replace("'", "''"),
-                values.next().ok_or(CsvValueGetting)?.replace("'", "''"),
-                values.next().ok_or(CsvValueGetting)?.replace("'", "''"),
-                values.next().ok_or(CsvValueGetting)?.replace("'", "''"),
-                values.next().ok_or(CsvValueGetting)?.parse::<f64>().unwrap_or_default(),
-                values.next().ok_or(CsvValueGetting)?.parse::<f64>().unwrap_or_default(),
-                values.next().ok_or(CsvValueGetting)?.parse::<i64>().unwrap_or_default(),
-                values.next().ok_or(CsvValueGetting)?.parse::<f64>().unwrap_or_default(),
-                values.next().ok_or(CsvValueGetting)?.replace("'", "''"),
-                values.next().ok_or(CsvValueGetting)?.replace("'", "''"),
-                values.next().ok_or(CsvValueGetting)?.replace("'", "''"),
-                values.next().ok_or(CsvValueGetting)?.replace("'", "''"),
+                values.next().ok_or(CsvValueGetting("country"))?.replace("'", "''"),
+                values.next().ok_or(CsvValueGetting("stateprov"))?.replace("'", "''"),
+                values.next().ok_or(CsvValueGetting("district"))?.replace("'", "''"),
+                values.next().ok_or(CsvValueGetting("city"))?.replace("'", "''"),
+                values.next().ok_or(CsvValueGetting("zipcode"))?.replace("'", "''"),
+                values.next().ok_or(CsvValueGetting("latitude"))?.parse::<f64>().unwrap_or_default(),
+                values.next().ok_or(CsvValueGetting("longitude"))?.parse::<f64>().unwrap_or_default(),
+                values.next().ok_or(CsvValueGetting("geoname_id"))?.parse::<i64>().unwrap_or_default(),
+                values.next().ok_or(CsvValueGetting("timezone_offset"))?.parse::<f64>().unwrap_or_default(),
+                values.next().ok_or(CsvValueGetting("timezone_name"))?.replace("'", "''"),
+                values.next().ok_or(CsvValueGetting("isp_name"))?.replace("'", "''"),
+                values.next().ok_or(CsvValueGetting("connection_type"))?.replace("'", "''"),
+                values.next().ok_or(CsvValueGetting("organization_name"))?.replace("'", "''"),
             ).as_str());
             index += 1;
             if index % inserts_per_statement == 0 {

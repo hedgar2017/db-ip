@@ -65,22 +65,22 @@ impl DBIP {
         if let Some(Ok(row)) = rows.next() {
             let mut iter = 0..row.column_count();
             Ok(Location{
-                country             : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
-                stateprov           : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
-                district            : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
-                city                : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
-                zipcode             : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
-                latitude            : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
-                longitude           : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
-                geoname_id          : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
-                timezone_offset     : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
-                timezone_name       : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
-                isp_name            : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
-                connection_type     : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
-                organization_name   : row.get_checked(iter.next().ok_or(RecordNotFound)?)?,
+                country             : row.get_checked(iter.next().ok_or(Unknown)?)?,
+                stateprov           : row.get_checked(iter.next().ok_or(Unknown)?)?,
+                district            : row.get_checked(iter.next().ok_or(Unknown)?)?,
+                city                : row.get_checked(iter.next().ok_or(Unknown)?)?,
+                zipcode             : row.get_checked(iter.next().ok_or(Unknown)?)?,
+                latitude            : row.get_checked(iter.next().ok_or(Unknown)?)?,
+                longitude           : row.get_checked(iter.next().ok_or(Unknown)?)?,
+                geoname_id          : row.get_checked(iter.next().ok_or(Unknown)?)?,
+                timezone_offset     : row.get_checked(iter.next().ok_or(Unknown)?)?,
+                timezone_name       : row.get_checked(iter.next().ok_or(Unknown)?)?,
+                isp_name            : row.get_checked(iter.next().ok_or(Unknown)?)?,
+                connection_type     : row.get_checked(iter.next().ok_or(Unknown)?)?,
+                organization_name   : row.get_checked(iter.next().ok_or(Unknown)?)?,
             })
         } else {
-            Err(Error::RecordNotFound)
+            Err(Error::NotFound)
         }
     }
 }

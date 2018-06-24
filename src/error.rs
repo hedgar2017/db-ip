@@ -5,8 +5,10 @@ use csv;
 pub enum Error {
     #[fail(display = "SQLite: {}", _0)]
     Sqlite(rusqlite::Error),
-    #[fail(display = "Record not found")]
-    RecordNotFound,
+    #[fail(display = "Not found")]
+    NotFound,
+    #[fail(display = "Unknown")]
+    Unknown,
 }
 
 impl From<rusqlite::Error> for Error {
@@ -26,7 +28,7 @@ pub enum ConverterError {
     #[fail(display = "CSV record getting")]
     CsvRecordGetting(csv::Error),
     #[fail(display = "CSV value getting")]
-    CsvValueGetting,
+    CsvValueGetting(&'static str),
     #[fail(display = "CSV IP address parsing")]
     CsvIpAddressParsing(::std::net::AddrParseError),
 }

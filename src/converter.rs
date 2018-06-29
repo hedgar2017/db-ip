@@ -12,13 +12,13 @@ pub struct Converter;
 const INSERTS_PER_STATEMENT: usize = 100000;
 
 impl Converter {
-    pub fn csv_to_db<R: Read, F: FnMut(usize)>(plain_csv_reader: R, db_path: &Path, mut status_fn: F) -> Result<(), ConverterError> {
+    pub fn csv_to_db<R: Read, F: FnMut(usize), P: AsRef<Path>>(plain_csv_reader: R, db_path: P, mut status_fn: F) -> Result<(), ConverterError> {
         use ConverterError::*;
 
         let mut csv_reader = csv::Reader::from_reader(plain_csv_reader);
 
-        let _ = File::create(db_path)?;
-        Self::run_sqlite(db_path, "\
+        let _ = File::create(db_path.as_ref())?;
+        Self::run_sqlite(db_path.as_ref().to_path_buf(), "\
             CREATE TABLE ip_location (\
                 ip_start            BLOB NOT NULL,\
                 ip_end              BLOB NOT NULL UNIQUE,\
@@ -80,23 +80,23 @@ impl Converter {
             if index % INSERTS_PER_STATEMENT == 0 {
                 (status_fn)(index);
                 statement.push_str(";");
-                Self::run_sqlite(db_path, &statement)?;
+                Self::run_sqlite(db_path.as_ref().to_path_buf(), &statement)?;
                 statement.clear();
             }
         }
         if statement.len() > 0 {
             statement.push_str(";");
-            Self::run_sqlite(db_path, &statement)?;
+            Self::run_sqlite(db_path.as_ref().to_path_buf(), &statement)?;
         }
 
         Ok(())
     }
 
-    fn run_sqlite(db_path: &Path, query: &str) -> Result<(), ConverterError> {
+    fn run_sqlite<P: AsRef<Path>>(db_path: P, query: &str) -> Result<(), ConverterError> {
         use ConverterError::*;
 
         let mut command = Command::new("sqlite3")
-            .arg(db_path)
+            .arg(db_path.as_ref())
             .stdin(Stdio::piped())
             .spawn()?;
         {

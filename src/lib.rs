@@ -12,8 +12,9 @@ extern crate failure;
 
 use rusqlite::Connection;
 use std::net::IpAddr;
+use std::path::Path;
 
-pub struct DBIP {
+pub struct DbIp {
     connection: Connection,
 }
 
@@ -34,11 +35,11 @@ pub struct Location {
     pub organization_name: String,
 }
 
-impl DBIP {
-    pub fn new(path: &str) -> Result<DBIP, Error> {
+impl DbIp {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<DbIp, Error> {
         let connection = Connection::open(path)?;
 
-        Ok(DBIP { connection })
+        Ok(DbIp { connection })
     }
 
     pub fn location_by_ip(&self, ip: &IpAddr) -> Result<Location, Error> {

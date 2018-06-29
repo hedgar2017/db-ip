@@ -1,23 +1,21 @@
 use std::fs::File;
 use std::str::FromStr;
-use std::io::{Write, BufReader};
+use std::io::{Write, Read};
 use std::process::{Command, Stdio};
 use std::net::IpAddr;
-use csv::Reader;
+use csv;
+use std::path::Path;
 
 use super::error::ConverterError;
 
 pub struct Converter;
+const INSERTS_PER_STATEMENT: usize = 100000;
 
 impl Converter {
-
-    pub fn csv_to_db(csv_path: &str, db_path: &str) -> Result<(), ConverterError> {
+    pub fn csv_to_db<R: Read, F: FnMut(usize)>(plain_csv_reader: R, db_path: &Path, mut status_fn: F) -> Result<(), ConverterError> {
         use ConverterError::*;
 
-        let inserts_per_statement = 100000;
-
-        let csv_file = File::open(csv_path)?;
-        let mut csv_reader = Reader::from_reader(BufReader::new(csv_file));
+        let mut csv_reader = csv::Reader::from_reader(plain_csv_reader);
 
         let _ = File::create(db_path)?;
         Self::run_sqlite(db_path, "\
@@ -39,7 +37,7 @@ impl Converter {
                 organization_name   TEXT NOT NULL\
             );"
         )?;
-        let mut statement = String::with_capacity(inserts_per_statement * 1000);
+        let mut statement = String::with_capacity(INSERTS_PER_STATEMENT * 1000);
 
         let mut index = 0usize;
         for record in csv_reader.records() {
@@ -59,7 +57,7 @@ impl Converter {
                 IpAddr::V6(end) => format!("{:032x}", u128::from(end)),
             };
 
-            statement.push_str(if index % inserts_per_statement == 0 {"INSERT INTO ip_location VALUES "} else {","});
+            statement.push_str(if index % INSERTS_PER_STATEMENT == 0 {"INSERT INTO ip_location VALUES "} else {","});
             statement.push_str(format!(
                 "(x'{}',x'{}','{}','{}','{}','{}','{}',{},{},{},{},'{}','{}','{}','{}')",
                 ip_start.as_str(),
@@ -79,7 +77,8 @@ impl Converter {
                 values.next().ok_or(CsvValueGetting("organization_name"))?.replace("'", "''"),
             ).as_str());
             index += 1;
-            if index % inserts_per_statement == 0 {
+            if index % INSERTS_PER_STATEMENT == 0 {
+                (status_fn)(index);
                 statement.push_str(";");
                 Self::run_sqlite(db_path, &statement)?;
                 statement.clear();
@@ -93,7 +92,7 @@ impl Converter {
         Ok(())
     }
 
-    fn run_sqlite(db_path: &str, query: &str) -> Result<(), ConverterError> {
+    fn run_sqlite(db_path: &Path, query: &str) -> Result<(), ConverterError> {
         use ConverterError::*;
 
         let mut command = Command::new("sqlite3")

@@ -23,13 +23,13 @@ pub enum ConverterError {
     IO(::std::io::Error),
     #[fail(display = "Sqlite piping")]
     SqlitePiping,
-    #[fail(display = "Sqlite process")]
+    #[fail(display = "Sqlite process: {:?}", _0)]
     SqliteProcess(::std::process::ExitStatus),
-    #[fail(display = "CSV record getting")]
+    #[fail(display = "CSV record getting: {:?}", _0)]
     CsvRecordGetting(csv::Error),
-    #[fail(display = "CSV value getting")]
+    #[fail(display = "CSV value getting: {:?}", _0)]
     CsvValueGetting(&'static str),
-    #[fail(display = "CSV IP address parsing")]
+    #[fail(display = "CSV IP address parsing: {:?}", _0)]
     CsvIpAddressParsing(::std::net::AddrParseError),
 }
 
